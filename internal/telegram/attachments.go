@@ -52,6 +52,12 @@ var allowedAttachmentExts = map[string]struct{}{
 	".xlsx": {},
 	".docx": {},
 	".pdf":  {},
+	".txt":  {},
+	".md":   {},
+	".json": {},
+	".yaml": {},
+	".yml":  {},
+	".log":  {},
 }
 
 type AttachmentConfig struct {
@@ -429,10 +435,28 @@ func (c *Connector) cleanupExpiredAttachments() {
 	)
 }
 
+func isTextLikeMIME(mime string) bool {
+	if strings.HasPrefix(mime, "text/") {
+		return true
+	}
+	switch mime {
+	case "application/json", "application/x-ndjson",
+		"application/yaml", "application/x-yaml",
+		"application/toml", "application/x-toml",
+		"application/xml", "application/javascript",
+		"application/typescript":
+		return true
+	}
+	return false
+}
+
 func isAllowedByMetadata(filename, mime string) bool {
 	mime = strings.ToLower(strings.TrimSpace(mime))
 	ext := normalizedAttachmentExt(filename)
 	if strings.HasPrefix(mime, "image/") {
+		return true
+	}
+	if isTextLikeMIME(mime) {
 		return true
 	}
 	if _, ok := allowedAttachmentMIMEs[mime]; ok {
@@ -461,10 +485,32 @@ func isAllowedByContent(filename, mime, detected string) bool {
 	if ext == ".csv" || ext == ".tsv" || mime == "text/csv" || mime == "text/tab-separated-values" || mime == "application/csv" {
 		return strings.HasPrefix(detected, "text/plain") || detected == "application/octet-stream"
 	}
+	if isTextLikeMIME(mime) || isTextLikeExt(ext) {
+		return strings.HasPrefix(detected, "text/") || detected == "application/octet-stream" ||
+			detected == "application/json" || detected == "application/xml"
+	}
 	if _, ok := allowedAttachmentMIMEs[mime]; ok {
 		return detected == mime || detected == "application/octet-stream"
 	}
 	return false
+}
+
+var textLikeExts = map[string]struct{}{
+	".txt":  {},
+	".md":   {},
+	".json": {},
+	".yaml": {},
+	".yml":  {},
+	".log":  {},
+	".csv":  {},
+	".tsv":  {},
+	".xml":  {},
+	".toml": {},
+}
+
+func isTextLikeExt(ext string) bool {
+	_, ok := textLikeExts[ext]
+	return ok
 }
 
 func normalizedAttachmentExt(name string) string {
@@ -496,6 +542,14 @@ func extFromMIME(mime string) string {
 		return ".xlsx"
 	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
 		return ".docx"
+	case "text/plain":
+		return ".txt"
+	case "text/markdown":
+		return ".md"
+	case "application/json":
+		return ".json"
+	case "application/yaml", "application/x-yaml", "text/yaml":
+		return ".yaml"
 	default:
 		return ""
 	}
