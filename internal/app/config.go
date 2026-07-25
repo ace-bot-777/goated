@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -20,6 +21,14 @@ var validClaudeModels = map[string]bool{
 	"opusplan": true,
 
 	// Current models
+	"claude-opus-5": true, "claude-opus-5[1m]": true,
+	"claude-sonnet-5": true, "claude-sonnet-5[1m]": true,
+	"claude-fable-5": true, "claude-fable-5[1m]": true,
+	"claude-mythos-5": true, "claude-mythos-5[1m]": true,
+	"claude-opus-4-8": true, "claude-sonnet-4-8": true,
+	"claude-opus-4-8[1m]": true, "claude-sonnet-4-8[1m]": true,
+	"claude-opus-4-7": true, "claude-sonnet-4-7": true,
+	"claude-opus-4-7[1m]": true, "claude-sonnet-4-7[1m]": true,
 	"claude-opus-4-6": true, "claude-sonnet-4-6": true,
 	"claude-haiku-4-5-20251001": true, "claude-haiku-4-5": true,
 	"claude-opus-4-6[1m]": true, "claude-sonnet-4-6[1m]": true,
@@ -39,11 +48,14 @@ func ValidateClaudeModel(model string) error {
 		return nil
 	}
 	if !validClaudeModels[model] {
-		var valid []string
+		// List the full allowlist: a stale hardcoded example set sent an agent
+		// chasing the wrong fix when Opus 5 shipped (2026-07-25).
+		valid := make([]string, 0, len(validClaudeModels))
 		for k := range validClaudeModels {
 			valid = append(valid, k)
 		}
-		return fmt.Errorf("invalid claude model %q; valid models: sonnet, opus, haiku, claude-opus-4-6, claude-sonnet-4-6, etc.", model)
+		sort.Strings(valid)
+		return fmt.Errorf("invalid claude model %q; valid models: %s", model, strings.Join(valid, ", "))
 	}
 	return nil
 }
