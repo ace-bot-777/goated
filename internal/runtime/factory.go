@@ -41,8 +41,8 @@ func New(cfg app.Config) (agent.Runtime, error) {
 			descriptor: session.Descriptor(),
 		}, nil
 	case agent.RuntimeClaudeTUI:
-		session := claudetui.NewSessionRuntime(cfg.WorkspaceDir, cfg.LogDir)
-		headless := claudetui.NewHeadlessRuntime(cfg.WorkspaceDir)
+		session := claudetui.NewSessionRuntime(cfg.WorkspaceDir, cfg.LogDir, cfg.Model)
+		headless := claudetui.NewHeadlessRuntime(cfg.WorkspaceDir, cfg.Model)
 		return &runtimeImpl{
 			session:    session,
 			headless:   headless,

@@ -21,13 +21,15 @@ type TmuxBridge struct {
 	WorkspaceDir string
 	LogDir       string
 	SessionName  string
+	Model        string
 }
 
-func NewSessionRuntime(workspaceDir, logDir string) *TmuxBridge {
+func NewSessionRuntime(workspaceDir, logDir, model string) *TmuxBridge {
 	return &TmuxBridge{
 		WorkspaceDir: workspaceDir,
 		LogDir:       logDir,
 		SessionName:  sessionname.ClaudeTUI(workspaceDir),
+		Model:        model,
 	}
 }
 
@@ -188,6 +190,9 @@ func (b *TmuxBridge) writeSessionID(id string) error {
 
 func (b *TmuxBridge) startSession(ctx context.Context, session, sessionID string, resume bool) error {
 	args := []string{"claude", "--dangerously-skip-permissions"}
+	if b.Model != "" {
+		args = append(args, "--model", b.Model)
+	}
 	if resume {
 		args = append(args, "--resume", sessionID)
 	} else {
