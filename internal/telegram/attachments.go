@@ -435,19 +435,30 @@ func (c *Connector) cleanupExpiredAttachments() {
 	)
 }
 
+// textLikeMIMEs is the explicit set of declared types we accept as text
+// uploads. It mirrors the text formats named in the user-facing supported
+// uploads message (TXT, MD, JSON, YAML, LOG, CSV/TSV) plus the aliases
+// Telegram clients and browsers realistically send for them. A blanket
+// "text/" prefix would also pull in text/html, text/x-python and friends,
+// which we do not promise to handle.
+var textLikeMIMEs = map[string]struct{}{
+	"text/plain":                {},
+	"text/markdown":             {},
+	"text/x-markdown":           {},
+	"application/json":          {},
+	"text/json":                 {},
+	"application/yaml":          {},
+	"application/x-yaml":        {},
+	"text/yaml":                 {},
+	"text/x-yaml":               {},
+	"text/csv":                  {},
+	"application/csv":           {},
+	"text/tab-separated-values": {},
+}
+
 func isTextLikeMIME(mime string) bool {
-	if strings.HasPrefix(mime, "text/") {
-		return true
-	}
-	switch mime {
-	case "application/json", "application/x-ndjson",
-		"application/yaml", "application/x-yaml",
-		"application/toml", "application/x-toml",
-		"application/xml", "application/javascript",
-		"application/typescript":
-		return true
-	}
-	return false
+	_, ok := textLikeMIMEs[mime]
+	return ok
 }
 
 func isAllowedByMetadata(filename, mime string) bool {
@@ -486,8 +497,11 @@ func isAllowedByContent(filename, mime, detected string) bool {
 		return strings.HasPrefix(detected, "text/plain") || detected == "application/octet-stream"
 	}
 	if isTextLikeMIME(mime) || isTextLikeExt(ext) {
-		return strings.HasPrefix(detected, "text/") || detected == "application/octet-stream" ||
-			detected == "application/json" || detected == "application/xml"
+		// Genuine text always sniffs as some text/ type. Anything else here
+		// is a binary payload wearing a text extension: executables and other
+		// unrecognised bytes come back as application/octet-stream, archives
+		// as application/zip, and so on.
+		return strings.HasPrefix(detected, "text/")
 	}
 	if _, ok := allowedAttachmentMIMEs[mime]; ok {
 		return detected == mime || detected == "application/octet-stream"
@@ -495,6 +509,9 @@ func isAllowedByContent(filename, mime, detected string) bool {
 	return false
 }
 
+// textLikeExts backs the fallback for uploads Telegram sends without a usable
+// MIME type. Every entry must also appear in allowedAttachmentExts, otherwise
+// isAllowedByMetadata rejects the file before content sniffing ever runs.
 var textLikeExts = map[string]struct{}{
 	".txt":  {},
 	".md":   {},
@@ -504,8 +521,6 @@ var textLikeExts = map[string]struct{}{
 	".log":  {},
 	".csv":  {},
 	".tsv":  {},
-	".xml":  {},
-	".toml": {},
 }
 
 func isTextLikeExt(ext string) bool {
