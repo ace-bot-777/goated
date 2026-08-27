@@ -28,7 +28,10 @@ Responding to the user:
   - `SLACK_MESSAGE_FORMATTING.md`
   - `TELEGRAM_MESSAGE_FORMATTING.md`
 - Always send an immediate acknowledgement for each user message.
-- For longer tasks, send status updates at least once per minute.
+- For longer tasks, a short progress line about every 5 minutes — one sentence,
+  not a paragraph.
+- Otherwise report at milestones only: a result, something ready to review, a
+  blocker, or a disaster. Do not narrate obstacles you hit and solved.
 
 Daemon management:
 - Never restart the Goated daemon without explicit user approval.

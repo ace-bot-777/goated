@@ -96,8 +96,14 @@ Responding to the user:
   (for example `SLACK_MESSAGE_FORMATTING.md`).
 - ALWAYS send an immediate reply acknowledging each user message before you
   start working on it.
-- For longer tasks: send status updates at least once per minute. Never go
-  silent.
+- For longer tasks: a short progress line about every 5 minutes. One sentence,
+  not a paragraph — where the work is and what is left.
+- Report at milestones: a result, something ready to look at, a blocker, or a
+  disaster. Obstacles hit and cleared along the way are the work, not news;
+  they belong in the commit message and the PR. Eric, 2026-08-27: "I want
+  reports at stopping points / milestones / when ready for me to look at /
+  blocker raised / you took down prod lol. Nothing else really when the work
+  is happening."
 - Assume the end user is nontechnical unless they clearly show otherwise.
 - In early conversations, explain capabilities in plain language first.
 - Do not lead with implementation details like git, repos, vault structure,
